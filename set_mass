@@ -12,8 +12,7 @@ import shap
 import joblib
 from scipy.stats import binom
 
-# Step 1: Load the dataset (replace with actual dataset loading)
-# Example: Random dataset generation for illustration
+
 np.random.seed(42)
 X = np.random.rand(100, 10)  # 100 samples, 10 features
 y = pd.DataFrame({
@@ -21,16 +20,12 @@ y = pd.DataFrame({
     'Ash_Content': np.random.rand(100)
 })
 
-# Step 2: Data Preprocessing
-# Train-test split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Feature scaling
 scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train)
 X_test_scaled = scaler.transform(X_test)
 
-# Step 3: Define the objective function for Differential Evolution optimization
 def objective_rf(params):
     n_estimators, max_depth, min_samples_split = int(params[0]), int(params[1]), int(params[2])
     rf = RandomForestRegressor(n_estimators=n_estimators, max_depth=max_depth, min_samples_split=min_samples_split, random_state=42)
@@ -39,26 +34,24 @@ def objective_rf(params):
     mse = mean_squared_error(y_test['Calorific_Value'], y_pred)
     return mse
 
-# Step 4: Differential Evolution Optimization
-# Setting bounds for the hyperparameters
 bounds = [(50, 500), (5, 30), (2, 20)]  # n_estimators, max_depth, min_samples_split
 result = differential_evolution(objective_rf, bounds, maxiter=10, popsize=10, mutation=(0.5, 1), recombination=0.7)
 
-# Best Random Forest hyperparameters
+
 best_rf_params = result.x
 print(f"Best Random Forest hyperparameters: {best_rf_params}")
 
-# Step 5: Train Random Forest with optimized hyperparameters
+
 rf_optimized = RandomForestRegressor(n_estimators=int(best_rf_params[0]),
                                      max_depth=int(best_rf_params[1]),
                                      min_samples_split=int(best_rf_params[2]),
                                      random_state=42)
 rf_optimized.fit(X_train_scaled, y_train['Calorific_Value'])
 
-# Save the trained Random Forest model
+
 joblib.dump(rf_optimized, 'random_forest_model.pkl')
 
-# Step 6: Model Evaluation - Evaluate Random Forest Model Performance
+
 y_pred_rf = rf_optimized.predict(X_test_scaled)
 rf_mse = mean_squared_error(y_test['Calorific_Value'], y_pred_rf)
 rf_mae = mean_absolute_error(y_test['Calorific_Value'], y_pred_rf)
@@ -66,15 +59,15 @@ rf_r2 = r2_score(y_test['Calorific_Value'], y_pred_rf)
 
 print(f"Random Forest Model Performance:\nMSE: {rf_mse}, MAE: {rf_mae}, R²: {rf_r2}")
 
-# Step 7: Train Gradient Boosting Model
+
 gb = GradientBoostingRegressor(n_estimators=200, max_depth=5, learning_rate=0.1, random_state=42)
 gb.fit(X_train_scaled, y_train['Calorific_Value'])
 
-# Step 8: Train XGBoost Model
+
 xgb = XGBRegressor(n_estimators=200, max_depth=5, learning_rate=0.1, random_state=42)
 xgb.fit(X_train_scaled, y_train['Calorific_Value'])
 
-# Step 9: Model Evaluation using Cross-validation
+
 models = [rf_optimized, gb, xgb]
 model_names = ['Random Forest', 'Gradient Boosting', 'XGBoost']
 cv_scores = []
@@ -85,7 +78,7 @@ for model in models:
     mse = -cross_val_score(model, X, y['Calorific_Value'], cv=kf, scoring='neg_mean_squared_error').mean()
     cv_scores.append(mse)
 
-# Step 10: Plot Model Comparison (Cross-Validation MSE Scores)
+
 sns.set(style="whitegrid")
 plt.figure(figsize=(8, 6))
 sns.barplot(x=model_names, y=cv_scores, palette="viridis", hue=model_names)
@@ -96,7 +89,7 @@ plt.tight_layout()
 plt.savefig("model_comparison_mse.png", dpi=300)  # Save with high quality (300 DPI)
 plt.show()
 
-# Step 11: Plot Feature Importance (for Random Forest)
+
 explainer = shap.TreeExplainer(rf_optimized)
 shap_values = explainer.shap_values(X_test_scaled)
 
@@ -106,7 +99,7 @@ plt.tight_layout()
 plt.savefig("shap_feature_importance.png", dpi=300)
 plt.show()
 
-# Step 12: Hyperparameter Tuning for Gradient Boosting using GridSearchCV
+
 from sklearn.model_selection import GridSearchCV
 
 param_grid = {'n_estimators': [100, 200, 300], 'max_depth': [3, 5, 7], 'learning_rate': [0.01, 0.05, 0.1]}
@@ -115,7 +108,7 @@ grid_search_gb.fit(X_train_scaled, y_train['Calorific_Value'])
 
 print(f"Best Gradient Boosting hyperparameters: {grid_search_gb.best_params_}")
 
-# Step 13: Train Gradient Boosting with optimal parameters from GridSearchCV
+
 gb_optimal = grid_search_gb.best_estimator_
 
 # Save Gradient Boosting model
